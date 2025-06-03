@@ -3,7 +3,7 @@ load("stpm2_models.RData")
 library(broom)
 library(dplyr)
 
-##### AUC and IBS calculation
+##### AUC and BS calculation
 library(riskRegression) # Load the riskRegression package for survival model validation.
 
 # Enables riskRegression to get risk probabilities from stpm2 models.
@@ -89,7 +89,7 @@ df_filtered <- df %>%
 write.csv(df_filtered, "df_filtered.csv", row.names = FALSE)
 
 
----
+##### Figure 1
   
   ## Prepare Data for Plotting
 # Identify unique terms present in each model to categorize them later.
@@ -182,6 +182,9 @@ F1<-ggplot(full_grid, aes(x = HR, y = term_display)) +
   )
 
 ggsave("Figure1_JAMA.png", plot = F1, width = 8, height = 6, units = "in", dpi = 300)
+
+
+##### Figure 2
 
 # --- Global Plotting Variable Definitions ---
 # Extract all unique levels for key categorical variables from the D_for_survival dataset.
@@ -362,6 +365,9 @@ final_plot <- patchwork::wrap_plots(hrher2_plot_list, ncol = 1) + # Added patchw
   theme(legend.position = "bottom") # Position the collected legend at the bottom of the final plot
 
 ggsave("Figure2_JAMA.png", plot = final_plot, width = 8, height = 6, units = "in", dpi = 300)
+
+
+##### Figure 3
 
 write.csv(all_surv_data, "all_surv_data.csv", row.names = FALSE)
 write.csv(all_hr_data, "all_hr_data.csv", row.names = FALSE)
