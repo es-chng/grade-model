@@ -8,6 +8,7 @@ hrher2_levels <- levels(D_for_survival$HRHER2)
 stage_levels <- levels(D_for_survival$Stage)
 grade_levels <- levels(D_for_survival$Grade)
 
+###### Figure 4
 
 # RMST plots
 # Tau values to evaluate
