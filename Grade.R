@@ -269,6 +269,114 @@ str(D_for_survival)
 # End of script. D_for_survival is ready for survival modeling.
 # table_export contains the descriptive statistics table.
 
+# Check excluded cohort
+# --- 2. Data Filtering ---
+filter_conditions <- list(
+  quote(!is.na(`Tumor grade`)),
+  quote(!is.na(Stage)),
+  quote(!is.na(ER)),
+  quote(!is.na(PR)),
+  quote(!is.na(HER2)),
+  quote(!is.na(`Mastectomy type`)),
+  quote(Time != 0),
+  quote(!is.na(Time))
+)
+
+D_final_filtered <- D
+for (condition_expr in filter_conditions) {
+  D_final_filtered <- D_final_filtered %>% filter(!!condition_expr)
+}
+
+cohort_filtered_data <- D_final_filtered
+cohort_filtered_out_data <- anti_join(D, cohort_filtered_data, by = names(D))
+
+# --- 3. Combine Cohorts + Variables ---
+combined_cohorts_for_gtsummary <- bind_rows(
+  cohort_filtered_data %>% mutate(cohort_type = "Filtered Data"),
+  cohort_filtered_out_data %>% mutate(cohort_type = "Filtered Out Data")
+) %>%
+  mutate(cohort_type = factor(cohort_type, levels = c("Filtered Data", "Filtered Out Data"))) %>%
+  mutate(
+    Time_FollowUp_Value = if_else(Time > 0, Time, NA_real_),
+    
+    Age_Group = cut(Age,
+                    breaks = c(0, 40, 50, 60, 70, 80, Inf),
+                    labels = c("<40", "40-49", "50-59", "60-69", "70-79", "80+"),
+                    right = FALSE,
+                    include.lowest = TRUE),
+    Age_Group = factor(Age_Group, levels = c("<40", "40-49", "50-59", "60-69", "70-79", "80+")),
+    
+    Year_Diagnosis_Group = case_when(
+      Year.of.diagnosis < 2016 ~ "Before 2016",
+      Year.of.diagnosis >= 2016 ~ "2016 and After",
+      TRUE ~ NA_character_
+    ),
+    Year_Diagnosis_Group = factor(Year_Diagnosis_Group, levels = c("Before 2016", "2016 and After"))
+  )
+
+# --- 4. gtsummary Table ---
+comparison_table <- combined_cohorts_for_gtsummary %>%
+  dplyr::select(
+    cohort_type,
+    Age_Group,
+    Race,
+    Year_Diagnosis_Group,
+    `Tumor grade`,
+    Stage,
+    ER,
+    PR,
+    HER2,
+    `Mastectomy type`,
+    Time_FollowUp_Value,
+    `Breast cancer deaths` = BCSS
+  ) %>%
+  tbl_summary(
+    by = cohort_type,
+    percent = "column",
+    statistic = list(
+      Time_FollowUp_Value ~ "{mean} ({sd})",
+      all_categorical() ~ "{n} ({p}%)"
+    ),
+    missing = "ifany",
+    label = list(
+      Age_Group ~ "Age group (Years)",
+      Race ~ "Race/Ethnicity",
+      Year_Diagnosis_Group ~ "Year of diagnosis",
+      `Tumor grade` ~ "Tumor grade",
+      Stage ~ "Stage",
+      ER ~ "ER",
+      PR ~ "PR",
+      HER2 ~ "HER2",
+      `Mastectomy type` ~ "Mastectomy Type",
+      Time_FollowUp_Value ~ "Time: Follow-up > 0 (Months)",
+      `Breast cancer deaths` ~ "Breast cancer deaths"
+    )
+  ) %>%
+  add_p() %>%
+  add_n() %>%
+  modify_header(label = "**Characteristic**") %>%
+  modify_spanning_header(c("stat_1", "stat_2") ~ "**Cohort**") %>%
+  modify_caption("**Table 1. Comparison of Filtered Data vs. Filtered Out Data**")
+
+# --- 5. Custom: Change "Missing" → "Time = 0" for Time only ---
+comparison_table <- comparison_table %>%
+  modify_table_body(
+    ~ .x %>%
+      mutate(
+        label = if_else(
+          variable == "Time_FollowUp_Value" & row_type == "missing",
+          "Time = 0",
+          label
+        )
+      )
+  ) %>%
+  bold_labels() %>%
+  as_flex_table()
+
+# --- Display Table ---
+comparison_table
+save_as_docx(comparison_table, path = "comparison_table.docx")
+
 
 # --- Cox Proportional Hazards Model Fitting and Assumption Check ---
 # Step 1: Fit Cox model
@@ -1377,3 +1485,4 @@ final_stacked_plot <- wrap_plots(all_combined_plots, ncol = 1) + # Stack all plo
 # Display the final stacked plot
 final_stacked_plot
 ggsave("Figure3_JAMAv1.png", plot = final_stacked_plot, width = 8, height = 6, units = "in", dpi = 300)
+
