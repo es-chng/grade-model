@@ -5,9 +5,7 @@ The code is shared for transparency and citation purposes.
 
 ## Contents
 
-- `JAMA_STPM2_Models.R`: Code for flexible survival model fitting using stpm2.
-- `JAMA_F1F3.R`: Code for generating Figures 1 to 3.
-- `JAMA_F4.R`: Code for generating Figure 4.
+- Grade.R: Codes to clean and create Figure 1 to Figure 3 and Table 1.
 
 ## Contact
 
