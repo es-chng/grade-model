@@ -5,7 +5,7 @@ The code is shared for transparency and citation purposes.
 
 ## Contents
 
-- Grade.R: Codes to clean and create Figure 1 to Figure 3 and Table 1.
+- Grade.R: Codes to clean data and create Figure 1 to Figure 3 and Table 1.
 
 ## Contact
 
