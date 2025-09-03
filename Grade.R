@@ -204,7 +204,7 @@ table_export <- DT_analysis %>%
   bold_labels() %>%
   as_flex_table()
 
-# print(table_export) # View table in console
+# print(table_export) # View table in console. TABLE 1 for manuscript.
 save_as_docx(table_export, path = "table_export_simplified.docx") # Uncomment to save as Word
 
 # --- 6. Prepare Data for Survival Analysis ---
@@ -629,8 +629,6 @@ df_filtered <- df %>%
 # Save the filtered data
 write.csv(df_filtered, "df_filtered.csv", row.names = FALSE)
 
-
----
   
   ## Prepare Data for Plotting
   # Identify unique terms present in each model to categorize them later.
@@ -785,7 +783,7 @@ F1<-ggplot(full_grid, aes(x = HR, y = term_display)) +
   )
 F1
 
-ggsave("Figure1_JAMAv1.png", plot = F1, width = 8, height = 6, units = "in", dpi = 300)
+ggsave("Figure1.jpg", plot = F1, width = 8, height = 6, units = "in", dpi = 300)
 
 # --- Global Plotting Variable Definitions ---
 # Extract all unique levels for key categorical variables from the D_for_survival dataset.
@@ -965,7 +963,7 @@ final_plot <- patchwork::wrap_plots(hrher2_plot_list, ncol = 1) + # Added patchw
   patchwork::plot_layout(guides = "collect") & # Added patchwork:: prefix
   theme(legend.position = "bottom") # Position the collected legend at the bottom of the final plot
 
-ggsave("Figure2_JAMAv1.png", plot = final_plot, width = 8, height = 6, units = "in", dpi = 300)
+ggsave("Figure2.jpg", plot = final_plot, width = 8, height = 6, units = "in", dpi = 300)
 
 write.csv(all_surv_data, "all_surv_data.csv", row.names = FALSE)
 write.csv(all_hr_data, "all_hr_data.csv", row.names = FALSE)
@@ -1484,5 +1482,5 @@ final_stacked_plot <- wrap_plots(all_combined_plots, ncol = 1) + # Stack all plo
 
 # Display the final stacked plot
 final_stacked_plot
-ggsave("Figure3_JAMAv1.png", plot = final_stacked_plot, width = 8, height = 6, units = "in", dpi = 300)
+ggsave("Figure3.jpg", plot = final_stacked_plot, width = 8, height = 6, units = "in", dpi = 300)
 
