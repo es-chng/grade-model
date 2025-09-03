@@ -7,12 +7,12 @@ library(survminer)
 library(rstpm2)
 library(flextable)
 
-# --- 1. Data Loading ---
+# --- Data Loading ---
 D <- read.csv("criteria 1.csv", header = TRUE, stringsAsFactors = FALSE)
 n_initial_load <- nrow(D)
 cat("Initial data loaded: ", n_initial_load, " rows\n")
 
-# --- 2. Feature Engineering and Preprocessing ---
+# --- Feature Engineering and Preprocessing ---
 radio_values_yes <- c(
   "Beam radiation",
   "Radioactive implants (includes brachytherapy) (1988+)",
@@ -132,7 +132,7 @@ n_after_feature_engineering <- nrow(D)
 cat("Number of rows after feature engineering: ", n_after_feature_engineering, " rows (no rows removed in this step)\n")
 
 
-# --- 3. Data Filtering (Detailed Breakdown - Simplified) ---
+# --- Data Filtering (Detailed Breakdown - Simplified) ---
 cat("\n3. Detailed Data Filtering for NAs and Time != 0:\n")
 n_before_step3_filter <- nrow(D)
 cat("   - Starting rows before any filter in Step 3: ", n_before_step3_filter, " rows\n")
@@ -166,7 +166,7 @@ cat("   - Total rows remaining after all Step 3 filters: ", nrow(D_filtered), " 
 cat("   - Total rows removed in Step 3 (cumulative): ", n_before_step3_filter - nrow(D_filtered), " rows\n")
 
 
-# --- 4. Select Columns for Descriptive Table ---
+# --- Select Columns for Descriptive Table ---
 DT_analysis <- D_filtered %>%
   dplyr::select(
     Age, Race, `Tumor grade`, ER, PR, HER2, `HR/HER2 status`, Stage,
@@ -174,7 +174,8 @@ DT_analysis <- D_filtered %>%
   )
 # No rows are removed in this step, only columns are selected.
 head(D_filtered)
-# --- 5. Table Generation and Export ---
+
+# --- Table Generation and Export ---
 # Ensure `HR/HER2 status` is a factor for the 'by' argument in tbl_summary
 DT_analysis$`HR/HER2 status` <- factor(DT_analysis$`HR/HER2 status`)
 
@@ -204,10 +205,10 @@ table_export <- DT_analysis %>%
   bold_labels() %>%
   as_flex_table()
 
-# print(table_export) # View table in console. TABLE 1 for manuscript.
-save_as_docx(table_export, path = "table_export_simplified.docx") # Uncomment to save as Word
+# print(table_export) #####"TABLE 1" for manuscript.
+save_as_docx(table_export, path = "table_export_simplified.docx") 
 
-# --- 6. Prepare Data for Survival Analysis ---
+# --- Prepare Data for Survival Analysis ---
 # Select relevant columns and rename for clarity
 D_for_survival <- D_filtered %>%
   dplyr::select(
@@ -266,11 +267,11 @@ sapply(D_for_survival %>% dplyr::select(Age, Grade, HRHER2, Stage, Time, BCSS), 
 cat("\nStructure of D_for_survival:\n")
 str(D_for_survival)
 
-# End of script. D_for_survival is ready for survival modeling.
-# table_export contains the descriptive statistics table.
+# End of script. ###D_for_survival is ready for survival modeling.
+# table_export contains the descriptive statistics table. TABLE1 for manuscript.
 
-# Check excluded cohort
-# --- 2. Data Filtering ---
+# Check excluded cohort #
+# --- Data Filtering ---
 filter_conditions <- list(
   quote(!is.na(`Tumor grade`)),
   quote(!is.na(Stage)),
@@ -290,7 +291,7 @@ for (condition_expr in filter_conditions) {
 cohort_filtered_data <- D_final_filtered
 cohort_filtered_out_data <- anti_join(D, cohort_filtered_data, by = names(D))
 
-# --- 3. Combine Cohorts + Variables ---
+# --- Combine Cohorts + Variables ---
 combined_cohorts_for_gtsummary <- bind_rows(
   cohort_filtered_data %>% mutate(cohort_type = "Filtered Data"),
   cohort_filtered_out_data %>% mutate(cohort_type = "Filtered Out Data")
@@ -314,7 +315,7 @@ combined_cohorts_for_gtsummary <- bind_rows(
     Year_Diagnosis_Group = factor(Year_Diagnosis_Group, levels = c("Before 2016", "2016 and After"))
   )
 
-# --- 4. gtsummary Table ---
+# --- gtsummary Table ---
 comparison_table <- combined_cohorts_for_gtsummary %>%
   dplyr::select(
     cohort_type,
@@ -357,8 +358,8 @@ comparison_table <- combined_cohorts_for_gtsummary %>%
   modify_header(label = "**Characteristic**") %>%
   modify_spanning_header(c("stat_1", "stat_2") ~ "**Cohort**") %>%
   modify_caption("**Table 1. Comparison of Filtered Data vs. Filtered Out Data**")
-
-# --- 5. Custom: Change "Missing" → "Time = 0" for Time only ---
+       
+# --- Custom: Change "Missing" → "Time = 0" for Time only ---
 comparison_table <- comparison_table %>%
   modify_table_body(
     ~ .x %>%
@@ -375,7 +376,8 @@ comparison_table <- comparison_table %>%
 
 # --- Display Table ---
 comparison_table
-save_as_docx(comparison_table, path = "comparison_table.docx")
+save_as_docx(comparison_table, path = "comparison_table.docx") 
+###Supplementary table 1 generated.
 
 
 # --- Cox Proportional Hazards Model Fitting and Assumption Check ---
@@ -483,7 +485,7 @@ predictSurvProb.stpm2 <- function(object, newdata, times, ...) {
                      ncol = length(times),
                      byrow = FALSE)
   
-  # 5. Add robust dimension check (inspired by predictSurvProb.coxph)
+  # Add robust dimension check (inspired by predictSurvProb.coxph)
   if (NROW(p_matrix) != NROW(newdata) || NCOL(p_matrix) != length(times)) {
     stop(paste("\nInternal Error: Prediction matrix has wrong dimensions after reshaping.\nRequested newdata x times: ",
                NROW(newdata), " x ", length(times), "\nProvided prediction matrix: ",
@@ -597,7 +599,8 @@ for (t in time_points) {
 # Display final AUC results across all evaluation time points
 print(auc_summary)
 
-
+                       
+### FIGURE 1
 # --- Extract model coefficients, calculate HRs and CIs, and combine results ---
 
 # Extract coefficients for each model, calculate HRs and CIs, and add a 'model' column
@@ -785,6 +788,8 @@ F1
 
 ggsave("Figure1.jpg", plot = F1, width = 8, height = 6, units = "in", dpi = 300)
 
+                       
+###FIGURE 2                      
 # --- Global Plotting Variable Definitions ---
 # Extract all unique levels for key categorical variables from the D_for_survival dataset.
 hrher2_levels <- levels(D_for_survival$HRHER2)
@@ -965,6 +970,8 @@ final_plot <- patchwork::wrap_plots(hrher2_plot_list, ncol = 1) + # Added patchw
 
 ggsave("Figure2.jpg", plot = final_plot, width = 8, height = 6, units = "in", dpi = 300)
 
+
+### DATA summary
 write.csv(all_surv_data, "all_surv_data.csv", row.names = FALSE)
 write.csv(all_hr_data, "all_hr_data.csv", row.names = FALSE)
 survival_data_at_60_months <- all_surv_data[all_surv_data$Time == 60, ]
@@ -1032,6 +1039,7 @@ maximum_hr_table <- do.call(rbind, max_hr_rows_list)
 print(maximum_hr_table)
 
 
+###FIGURE 3                    
 library(ggplot2)
 library(dplyr)
 library(stringr)
@@ -1354,8 +1362,7 @@ plot_rmst_diff_bar <- function(stage_value, hrher2_value, data_df, diff_limits) 
   
   return(p_diff)
 }
-# Assuming 'all_rmst_values' and 'all_rmst_differences' are already loaded
-# and contain data for various HRHER2 levels.
+
 
 # Step 1: Combine all RMST and Difference data into a single 'final_df'
 # This 'final_df' will contain data for ALL HRHER2 levels
@@ -1482,5 +1489,6 @@ final_stacked_plot <- wrap_plots(all_combined_plots, ncol = 1) + # Stack all plo
 
 # Display the final stacked plot
 final_stacked_plot
+                              
 ggsave("Figure3.jpg", plot = final_stacked_plot, width = 8, height = 6, units = "in", dpi = 300)
 
